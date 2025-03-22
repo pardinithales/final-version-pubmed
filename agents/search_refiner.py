@@ -55,7 +55,8 @@ class SearchRefiner:
 
         - Se encontrar menos de 20 resultados, simplifique a query removendo termos menos relevantes, mantendo o núcleo da população e intervenção.
         - Retorne APENAS a query refinada, no formato exato para pesquisa no PubMed, sem explicações ou texto adicional.
-        - Garanta que não seja retornados [All fields], [mh], mesh etc.! 
+        - Garanta que não seja retornados [All fields], [mh], mesh etc., [tiab] - REMOVER TUDO!
+        - Garantir o máximo de sinônimos relevantes! 
         """
         if abstracts:
             extra_terms = self.extract_terms_from_abstracts(abstracts)
