@@ -1,9 +1,8 @@
-# C:\Users\Usuario\Desktop\projetos\PUBMED_CREW\agents\query_validator.py
 from anthropic import Anthropic, APIError
 import logging
 import os
 from dotenv import load_dotenv
-from typing import Tuple
+from typing import Tuple, Optional
 
 load_dotenv()
 
@@ -20,7 +19,7 @@ class QueryValidator:
         self.client = Anthropic(api_key=api_key)
         self.model = "claude-3-7-sonnet-20250219"
 
-    def validate_query(self, user_query: str) -> Tuple[bool, str | None]:
+    def validate_query(self, user_query: str) -> Tuple[bool, Optional[str]]:
         """
         Valida a query usando a API Anthropic e retorna se é válida e a tradução em inglês.
         Retorna (is_valid, translated_query).
