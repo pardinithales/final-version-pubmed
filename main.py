@@ -1,3 +1,4 @@
+# C:\Users\Usuario\Desktop\projetos\PUBMED_CREW\main.py
 import os
 import logging
 from dotenv import load_dotenv
@@ -7,7 +8,7 @@ from agents.search_refiner import SearchRefiner
 
 load_dotenv()
 
-required_vars = ["ANTHROPIC_API_KEY", "DEEPSEEK_API_KEY", "PUBMED_EMAIL"]
+required_vars = ["ANTHROPIC_API_KEY", "PUBMED_EMAIL"]
 for var in required_vars:
     if not os.getenv(var):
         raise ValueError(f"Variável de ambiente {var} não definida no .env")
@@ -38,25 +39,52 @@ def main():
 
     current_query = initial_query
     iteration = 0
+    max_initial_iterations = 3
+    max_additional_iterations = 5
+    min_abstracts = 20  # Número mínimo de abstracts desejado
+
     while True:
         iteration += 1
         logger.info(f"Iteração {iteration} - Query atual: {current_query}")
         refined_query = refiner.refine_search(current_query, abstracts, validated_query)
         logger.info(f"Query refinada: {refined_query}")
-        if refined_query == current_query and pmids:
-            logger.info("Busca finalizada com resultados.")
+
+        # Verificar se a query não mudou e há resultados suficientes
+        if refined_query == current_query and pmids and len(abstracts) >= min_abstracts:
+            logger.info("Busca finalizada com resultados suficientes.")
             print(f"Pesquise no PubMed com esta query:\n{refined_query}")
             print("\nResultados encontrados:")
             for pmid, abstract in zip(pmids, abstracts):
                 print(f"PMID: {pmid}\nAbstract: {abstract}\n")
             break
-        elif iteration > 3:
-            logger.warning("Limite de iterações atingido.")
+
+        # Verificar limite inicial de iterações
+        if iteration > max_initial_iterations:
+            if len(abstracts) >= min_abstracts:
+                logger.info(f"Limite inicial de iterações atingido, mas número de abstracts suficiente ({len(abstracts)}).")
+                print(f"Pesquise no PubMed com esta query:\n{refined_query}")
+                print("\nResultados encontrados:")
+                for pmid, abstract in zip(pmids, abstracts):
+                    print(f"PMID: {pmid}\nAbstract: {abstract}\n")
+                break
+            else:
+                logger.warning(f"Limite inicial de iterações atingido, mas número de abstracts insuficiente ({len(abstracts)}). Tentando mais {max_additional_iterations} iterações.")
+
+        # Verificar limite total de iterações (inicial + adicionais)
+        if iteration > (max_initial_iterations + max_additional_iterations):
+            logger.warning("Limite total de iterações atingido.")
             print(f"Pesquise no PubMed com esta query (melhor tentativa):\n{refined_query}")
+            if pmids:
+                print("\nResultados encontrados:")
+                for pmid, abstract in zip(pmids, abstracts):
+                    print(f"PMID: {pmid}\nAbstract: {abstract}\n")
             break
+
         current_query = refined_query
         abstracts, pmids = searcher.search_pubmed(current_query)
         logger.info(f"Novos resultados - PMIDs: {pmids}, Abstracts: {len(abstracts)} encontrados")
+
+        # Permitir mais refinamentos na primeira iteração se não houver resultados
         if not pmids and iteration == 1:
             logger.info("Primeira iteração sem resultados; permitindo mais refinamentos.")
 

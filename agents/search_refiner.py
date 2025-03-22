@@ -38,13 +38,24 @@ class SearchRefiner:
         - Use os abstracts para identificar siglas (ex.: "SAH" para "subarachnoid hemorrhage") ou sinônimos relevantes, adicionando-os com "OR" apenas se não forem redundantes.
         - Use os abstracts para extrair ao máximo nomes de dispositivos (ex.: "taVNS") e nomes comerciais de medicações (ex.: "apixaban"), adicionando-os com "OR" se relevantes.
         - Evite redundâncias: por exemplo, use "stroke" em vez de "acute stroke" e "stroke"; para "migraine" ou "migrainous", use "migrain*" se aplicável.
-        - Aplique o princípio do mínimo: evite combinar termos como "vagus nerve stimulation" e "auricular vagus nerve stimulation" (use apenas o mais abrangente).
+        - Aplique o princípio do mínimo: evite combinar termos como "vagus nerve stimulation" e "auricular vagus nerve stimulation"  --> aqui bastaria "vagus nerve stimulation"
+        - Evite ao máximo expressões com mais de 2 termos - pense antes se o termo é necessário.
         - Adicione aspectos de outcome específicos EM OUTRO PARENTESE (LIGADO PELO "AND") SOMENTE SE MAIS DE 500 RESULTADOS FOREM IDENTIFICADOS, evitando "OR", "HR", e sim outcomes ou comparadores extremamente específicos IDENTIFICADOS na query inicial do usuário.
         - Exemplo de outcomes: "progression-free survival", "survival", "cerebral vasospasm", evitando termos genéricos como "inflammation" isoladamente; use "OR" entre eles dentro do parêntese.
         - Use aspas apenas em termos compostos essenciais (ex.: "vagus nerve stimulation"); todos os termos devem estar entre aspas ou com wildcard (ex.: "migrain*").
-        - Não inclua tipos de estudo (ex.: "randomized controlled trial"), anos, "humans" ou filtros semelhantes.
+        - Não inclua tipos de estudos de início  (ex.: "randomized controlled trial"), anos, "humans", "animals" ou filtros semelhantes.
+        - Você estará permitido a usar filtros como SOMENTE SE FOREM ENCONTRADOS MAIS DE 300 RESULTADOS OU SE O USUÁRIO TE SOLICITAR MUITO EXPLICITAMENTE, DIZENDO QUE NÃO QUER OUTRO TIPO!
+
+
+        # COHORT: ((“prospective cohort”[ti] OR “relative risk*”[tiab] OR“prospective”[ti] OR “cohort study”[ti] OR longitudinal[ti] OR “long-term”[ti] OR “RR”[tiab] OR “RRs”[tiab] OR ) NOT ("systematic review"[ti] OR "meta-analysis"[ti] OR "metaanalysis"[ti] OR "metanalysis"[ti] OR “phase 1” OR “phase 2” OR “phase 3” OR “pilot trial” OR “retrospective cohort” OR "network"[ti]))
+        # Case-control: (("case-control"[ti] OR "case control"[ti] OR "retrospective study"[ti] OR “retrospective cohort”[tiab] OR "matched study"[ti]) AND ("odds ratio"[tiab] OR "odds ratios"[tiab] OR "case referent"[tiab] OR "unmatched"[tiab] OR "matched pairs"[tiab] OR "risk factor"[tiab]) NOT ("systematic review"[ti] OR "meta-analysis"[ti] OR "metaanalysis"[ti] OR "metanalysis"[ti] OR "network"[ti]))
+        # SYSTEMATIC REVIEW OR META-ANALYSIS: ("systematic review"[ti] OR "meta-analysis"[ti] OR "metaanalysis"[ti] OR "metanalysis"[ti] OR "network"[ti]) 
+        # RCT: (("controlled trial"[ti] OR "clinical trial"[ti] OR randomized[ti] OR placebo[ti] OR double-blind[ti] OR controlled[ti] OR randomised[ti] OR RCT[ti]) NOT ("systematic review"[ti] OR "protocol"[ti] OR "data from"[ti] OR "results from"[ti] OR "post-hoc" OR "case-controlled"[ti] OR "meta-analysis"[ti] OR "metaanalysis"[ti] OR comment*[ti] OR guidelin*[ti] OR "a review"[ti] OR "metanalysis"[ti] OR "case series"[ti]))
+
+
         - Se encontrar menos de 20 resultados, simplifique a query removendo termos menos relevantes, mantendo o núcleo da população e intervenção.
         - Retorne APENAS a query refinada, no formato exato para pesquisa no PubMed, sem explicações ou texto adicional.
+        - Garanta que não seja retornados [All fields], [mh], mesh etc.! 
         """
         if abstracts:
             extra_terms = self.extract_terms_from_abstracts(abstracts)
