@@ -1,11 +1,12 @@
+# C:\Users\Usuario\Desktop\projetos\PUBMED_CREW\api.py
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import logging
 from dotenv import load_dotenv
 import os
-from agents.query_validator import QueryValidator
 from agents.pubmed_searcher import PubmedSearcher
 from agents.search_refiner import SearchRefiner
+from agents.query_validator import validate_and_raise, QueryValidationError
 
 load_dotenv()
 
@@ -34,15 +35,12 @@ async def search_pubmed(request: SearchRequest):
     logger.info(f"Query recebida: {user_query}, Max iterações: {max_initial_iterations}")
 
     try:
-        validator = QueryValidator()
+        # Validar e traduzir a query usando a nova função
+        validated_query = validate_and_raise(user_query)
+        logger.info(f"Query validada e traduzida: {validated_query}")
+
         searcher = PubmedSearcher()
         refiner = SearchRefiner()
-
-        is_valid, validated_query = validator.validate_query(user_query)
-        if not is_valid:
-            logger.error("Query inválida: deve conter população e intervenção.")
-            raise HTTPException(status_code=400, detail="A query deve conter pelo menos uma população específica e uma intervenção.")
-        logger.info(f"Query validada e traduzida: {validated_query}")
 
         initial_query = searcher.build_initial_query(validated_query)
         abstracts, pmids = searcher.search_pubmed(initial_query)
@@ -91,7 +89,9 @@ async def search_pubmed(request: SearchRequest):
             "total_results": len(results)
         }
 
+    except QueryValidationError as e:
+        logger.error(f"Query inválida: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Erro durante a busca: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erro durante a busca: {str(e)}")
-        
